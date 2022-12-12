@@ -61,6 +61,10 @@ def args_parse():
                         default=os.environ.get('CHECK_UNIFI_PASS'),
                         help='Password for user')
 
+    # Enable performance data
+    parser.add_argument('--perfdata', action='store_true', required=False,
+                        help='Enable performance data, (Default: false')
+
     # Timeout
     parser.add_argument('--timeout', type=int, required=False,
                         default=10,
@@ -132,14 +136,17 @@ def check_site_stats(args):
 
     try:
         resp = req.get(uri, headers=header, allow_redirects=False, timeout=5)
-        data = resp.json()
-        state = 0 if data['data'][0]['status'] == 'ok' else 1
-        msg = f'WLAN - Active APs: {data["data"][0]["num_ap"]}, ' + \
-              f'Disconnected APs: {data["data"][0]["num_disconnected"]}, ' + \
-              f'Client Devices: {data["data"][0]["num_user"]}'
-
     except Exception:
         sys.exit(1)
+
+    data = resp.json()
+    state = 0 if data['data'][0]['status'] == 'ok' else 1
+    msg = f'WLAN - Active APs: {data["data"][0]["num_ap"]}, ' + \
+          f'Disconnected APs: {data["data"][0]["num_disconnected"]}, ' + \
+          f'Client Devices: {data["data"][0]["num_user"]}'
+
+    if args.perfdata:
+        perfdata = f'\'num_user\'={data["data"][0]["num_user"]}'
 
     return {"state": state, "message": msg, "perfdata": perfdata}
 
@@ -151,7 +158,12 @@ def fmt_output(struct):
     # Define the monitoring states
     states = ['OK', 'WARNING', 'CRITICAL', 'UNKNOWN']
 
-    print(f'{states[struct["state"]]}: {struct["message"]}')
+    if struct['perfdata']:
+        print(f'{states[struct["state"]]}: {struct["message"]}' + \
+              f' | {struct["perfdata"]}')
+    else:
+        print(f'{states[struct["state"]]}: {struct["message"]}')
+
     sys.exit(struct["state"])
 
 
