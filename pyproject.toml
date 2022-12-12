@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "check-unifi"
+version = "0.1.0"
+description = "Monitoring check plugin for Unifi Controller"
+authors = ["Daniel Schade <mail@bashlover.de>"]
+readme = "README.md"
+packages = [{include = "check_unifi"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+requests = "^2.28.1"
+pylint = "^2.15.8"
+pycodestyle = "^2.10.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
