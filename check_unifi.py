@@ -73,7 +73,7 @@ def check_health(args):
         req = requests.get(uri, allow_redirects=False, timeout=5)
         if req.json()['meta']['up'] and req.json()['meta']['rc'] == 'ok':
             state = 0
-            msg = 'Healthy - Unifi Network Application Version: ' + \
+            msg = 'Healthy - Unifi Network Application: v' + \
                   f'{req.json()["meta"]["server_version"]}'
     except Exception:
         state = 2
