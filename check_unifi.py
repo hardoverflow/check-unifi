@@ -146,7 +146,9 @@ def check_site_stats(args):
           f'Client Devices: {data["data"][0]["num_user"]}'
 
     if args.perfdata:
-        perfdata = f'\'num_user\'={data["data"][0]["num_user"]}'
+        perfdata = f'\'num_user\'={data["data"][0]["num_user"]}; ' + \
+                   f'\'num_ap\'={data["data"][0]["num_ap"]}; ' + \
+                   f'\'num_disconnected\'={data["data"][0]["num_disconnected"]};'
 
     return {"state": state, "message": msg, "perfdata": perfdata}
 
@@ -159,7 +161,7 @@ def fmt_output(struct):
     states = ['OK', 'WARNING', 'CRITICAL', 'UNKNOWN']
 
     if struct['perfdata']:
-        print(f'{states[struct["state"]]}: {struct["message"]}' + \
+        print(f'{states[struct["state"]]}: {struct["message"]}' +
               f' | {struct["perfdata"]}')
     else:
         print(f'{states[struct["state"]]}: {struct["message"]}')
