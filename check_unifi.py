@@ -7,6 +7,7 @@ Check plugin for UniFi Controller
 
 import argparse
 import os
+import re
 import sys
 import requests
 
@@ -95,10 +96,12 @@ def check_health(args):
 
     try:
         resp = requests.get(uri, allow_redirects=False, timeout=5)
-        resp.raise_for_status()
-    except requests.exceptions.HTTPError:
-        return {"state": 3, "message": f"{resp.status_code}",
-                "perfdata": None}
+        if re.match(r'^30\d', str(resp.status_code)):
+            return {'state': 3, 'message': f'Found redirection for {uri}. '
+                    'Wrong protocol?', 'perfdata': None}
+    except requests.exceptions.ConnectionError:
+        return {'state': 3, 'message': 'There was a connection problem for: '
+                f'{uri}', 'perfdata': None}
 
     if resp.json()['meta']['up'] and resp.json()['meta']['rc'] == 'ok':
         state = 0
@@ -123,8 +126,9 @@ def api_login(args):
     try:
         req.post(uri, headers=header, json=payload, allow_redirects=False,
                  timeout=5)
-    except Exception:
-        sys.exit(1)
+    except requests.exceptions.ConnectionError:
+        print(f'There was a connection problem for: {uri}')
+        sys.exit(3)
 
     return req
 
@@ -146,8 +150,9 @@ def check_site_stats(args):
     # Get site stats
     try:
         resp = req.get(uri, headers=header, allow_redirects=False, timeout=5)
-    except Exception:
-        sys.exit(1)
+    except requests.exceptions.ConnectionError:
+        return {'state': 3, 'message': 'There was a connection problem for: '
+                f'{uri}', 'perfdata': None}
 
     data = resp.json()
     state = 0 if data['data'][0]['status'] == 'ok' else 1
