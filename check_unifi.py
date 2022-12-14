@@ -10,7 +10,7 @@ import os
 import sys
 import requests
 
-__version__ = '1.0'
+__version__ = '1.1'
 
 
 def args_parse():
@@ -22,9 +22,14 @@ def args_parse():
 
     # Setup argument parser
     parser = argparse.ArgumentParser(
+            add_help=False,
             prog='check_unifi.py',
             description='Check plugin for UniFi Controller'
     )
+
+    parser.add_argument('--help', '-h', action='help',
+                        default=argparse.SUPPRESS,
+                        help='Show this help message and exit')
 
     # Host name or IP address
     parser.add_argument('--host', '-H', type=str, required=True,
@@ -84,21 +89,23 @@ def check_health(args):
     Get the health state of the controller
 
     """
-    state, msg, perfdata = 3, None, None
+    state, msg, perf = 3, None, None
     proto = 'https' if args.ssl else 'http'
     uri = f'{proto}://{args.host}/status'
 
     try:
-        req = requests.get(uri, allow_redirects=False, timeout=5)
-        if req.json()['meta']['up'] and req.json()['meta']['rc'] == 'ok':
-            state = 0
-            msg = 'Healthy - UniFi Network Application: v' + \
-                  f'{req.json()["meta"]["server_version"]}'
-    except Exception:
-        state = 2
-        msg = 'Unhealthy - Cannot get controller health state'
+        resp = requests.get(uri, allow_redirects=False, timeout=5)
+        resp.raise_for_status()
+    except requests.exceptions.HTTPError:
+        return {"state": 3, "message": f"{resp.status_code}",
+                "perfdata": None}
 
-    return {"state": state, "message": msg, "perfdata": perfdata}
+    if resp.json()['meta']['up'] and resp.json()['meta']['rc'] == 'ok':
+        state = 0
+        msg = 'Healthy - UniFi Network Application: v' + \
+              f'{resp.json()["meta"]["server_version"]}'
+
+    return {"state": state, "message": msg, "perfdata": perf}
 
 
 def api_login(args):
@@ -127,13 +134,16 @@ def check_site_stats(args):
     Get site health state by site id
 
     """
+    # Define some variables
     header = {'Accept': 'application/json', 'Content-Type': 'application/json'}
-    state, msg, perfdata = 3, None, None
+    state, msg, perf = 3, None, {}
     proto = 'https' if args.ssl else 'http'
     uri = f'{proto}://{args.host}/api/s/{args.site_id}/stat/health'
 
+    # Require a valid session to query the api endpoint
     req = api_login(args)
 
+    # Get site stats
     try:
         resp = req.get(uri, headers=header, allow_redirects=False, timeout=5)
     except Exception:
@@ -146,11 +156,9 @@ def check_site_stats(args):
           f'Client Devices: {data["data"][0]["num_user"]}'
 
     if args.perfdata:
-        perfdata = f'\'num_user\'={data["data"][0]["num_user"]}; ' + \
-                   f'\'num_ap\'={data["data"][0]["num_ap"]}; ' + \
-                   f'\'num_disconnected\'={data["data"][0]["num_disconnected"]};'
+        perf = data["data"][0]
 
-    return {"state": state, "message": msg, "perfdata": perfdata}
+    return {"state": state, "message": msg, "perfdata": perf}
 
 
 def fmt_output(struct):
@@ -160,13 +168,15 @@ def fmt_output(struct):
     # Define the monitoring states
     states = ['OK', 'WARNING', 'CRITICAL', 'UNKNOWN']
 
+    # Format and print output
     if struct['perfdata']:
-        print(f'{states[struct["state"]]}: {struct["message"]}' +
-              f' | {struct["perfdata"]}')
+        print(f'{states[struct["state"]]}: {struct["message"]} | ' +
+              ';'.join([f'\'{key}\'={val}'
+                       for key, val in sorted(struct['perfdata'].items())]))
     else:
         print(f'{states[struct["state"]]}: {struct["message"]}')
 
-    sys.exit(struct["state"])
+    sys.exit(struct['state'])
 
 
 def main():
