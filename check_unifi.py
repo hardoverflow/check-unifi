@@ -171,7 +171,7 @@ def fmt_output(struct):
     # Format and print output
     if struct['perfdata']:
         print(f'{states[struct["state"]]}: {struct["message"]} | ' +
-              ';'.join([f'\'{key}\'={val}'
+              ' '.join([f'\'{key}\'={val}'
                        for key, val in sorted(struct['perfdata'].items())]))
     else:
         print(f'{states[struct["state"]]}: {struct["message"]}')
