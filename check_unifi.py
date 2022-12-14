@@ -163,6 +163,10 @@ def check_site_stats(args):
     if args.perfdata:
         perf = data['data'][0]
 
+        # Remove some useless keys
+        for key in ('status', 'subsystem'):
+            perf.pop(key, None)
+
         # Append Unit of Measurement (UoM)
         for key in ('rx_bytes-r', 'tx_bytes-r'):
             perf.update({key: str(data['data'][0][key]) + 'B'})
@@ -179,10 +183,6 @@ def fmt_output(struct):
 
     # Format and print output
     if struct['perfdata']:
-        # Remove some useless keys
-        for key in ('status', 'subsystem'):
-            struct['perfdata'].pop(key, None)
-
         # Concat perfdata
         print(f'{states[struct["state"]]}: {struct["message"]} | ' +
               ' '.join([f'\'{key}\'={val}'
