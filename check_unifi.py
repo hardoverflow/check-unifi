@@ -156,9 +156,13 @@ def check_site_stats(args):
           f'Client Devices: {data["data"][0]["num_user"]}'
 
     if args.perfdata:
-        perf = data["data"][0]
+        perf = data['data'][0]
 
-    return {"state": state, "message": msg, "perfdata": perf}
+        # Append Unit of Measurement (UoM)
+        for key in ('rx_bytes-r', 'tx_bytes-r'):
+            perf.update({key: str(data['data'][0][key]) + 'B'})
+
+    return {'state': state, 'message': msg, 'perfdata': perf}
 
 
 def fmt_output(struct):
