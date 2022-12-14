@@ -170,6 +170,11 @@ def fmt_output(struct):
 
     # Format and print output
     if struct['perfdata']:
+        # Remove some useless keys
+        for key in ('status', 'subsystem'):
+            struct['perfdata'].pop(key, None)
+
+        # Concat perfdata
         print(f'{states[struct["state"]]}: {struct["message"]} | ' +
               ' '.join([f'\'{key}\'={val}'
                        for key, val in sorted(struct['perfdata'].items())]))
