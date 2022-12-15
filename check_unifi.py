@@ -5,14 +5,24 @@
 Check plugin for UniFi Network Application
 """
 
+from functools import partial
 from statistics import mean
 import argparse
 import os
 import re
+import signal
 import sys
 import requests
 
 __version__ = '0.1'
+
+
+def handle_sigalrm(signum, frame, timeout=None):
+    """
+    Handle a timeout
+    """
+    print(f'UNKNOWN: Plugin timed out after {timeout} seconds')
+    sys.exit(3)
 
 
 def args_parse():
@@ -33,37 +43,38 @@ def args_parse():
                         default=argparse.SUPPRESS,
                         help='Show this help message and exit')
 
-    # Host name or IP address
+    # Host name or IP address of the controller
     parser.add_argument('--host', '-H', type=str, required=True,
                         default=os.environ.get('CHECK_UNIFI_HOST'),
                         help='Host name or IP address of the UniFi Controller')
 
-    # Port number
+    # Set the port number where the controller is listening
     parser.add_argument('--port', '-p', type=int, required=False,
                         default=os.environ.get('CHECK_UNIFI_PORT', 443),
                         help='The TCP port number, (default: 443)')
 
-    # Enable SSL for the connection
+    # Enable ssl for the connection
     parser.add_argument('--ssl', '-S', action='store_true', required=False,
                         help='Use SSL for the connection')
 
-    # Mode of the check plugin
+    # Set the mode of the check
     parser.add_argument('--mode', '-m', type=str, required=False,
                         default=os.environ.get('CHECK_UNIFI_MODE', 'health'),
-                        help='Mode of the check, (default: health)')
+                        help='Mode of the check, ["health", "stats"] \
+                                (default: health)')
 
-    # Site ID
+    # Set the site-id
     parser.add_argument('--site-id', type=str, required=False,
                         default=os.environ.get('CHECK_UNIFI_SITE_ID',
                                                'default'),
                         help='Site ID, (default: default)')
 
-    # Username
+    # Set the username to login
     parser.add_argument('--user', type=str, required=False,
                         default=os.environ.get('CHECK_UNIFI_USER'),
-                        help='Username')
+                        help='Username to login')
 
-    # Password
+    # Set the password of the user
     parser.add_argument('--password', type=str, required=False,
                         default=os.environ.get('CHECK_UNIFI_PASS'),
                         help='Password for user')
@@ -72,15 +83,15 @@ def args_parse():
     parser.add_argument('--perfdata', action='store_true', required=False,
                         help='Enable performance data, (Default: false)')
 
-    # Timeout
+    # Set the timeout of the check
     parser.add_argument('--timeout', type=int, required=False,
                         default=10,
                         help='Override the plugin timeout, (default: 10)')
 
-    # Version
+    # Show the version of the check plugin
     parser.add_argument('--version', '-v', action='version',
                         version=f'%(prog)s {__version__}',
-                        help='Show the version number and exit')
+                        help='Show the version number of the check plugin')
 
     # Return arguments
     return parser.parse_args()
@@ -96,19 +107,26 @@ def check_health(args):
     uri = f'{proto}://{args.host}/status'
 
     try:
+        # Get the public health endpoint
         resp = requests.get(uri, allow_redirects=False, timeout=5)
+
+        # Detects a redirection
         if re.match(r'^30\d', str(resp.status_code)):
             return {'state': 3, 'message': f'Found redirection for {uri}. '
                     'Wrong protocol?', 'perfdata': None}
+
+    # Exception for a connection error
     except requests.exceptions.ConnectionError:
         return {'state': 3, 'message': 'There was a connection problem for: '
                 f'{uri}', 'perfdata': None}
 
+    # If controller works fine, then these objects are 'ok'
     if resp.json()['meta']['up'] and resp.json()['meta']['rc'] == 'ok':
         state = 0
         msg = 'Healthy - UniFi Network Application: v' + \
               f'{resp.json()["meta"]["server_version"]}'
 
+    # Returns the state and message only
     return {"state": state, "message": msg, "perfdata": perf}
 
 
@@ -217,11 +235,14 @@ def fmt_output(struct):
 
 def main():
     """
-    Main function
+    Icinga 2 check for UniFi Network Application
     """
-
     # Parse arguments
     args = args_parse()
+
+    # Handle timeout
+    signal.signal(signal.SIGALRM, partial(handle_sigalrm, timeout=args.timeout))
+    signal.alarm(args.timeout)
 
     if args.mode == 'health':
         fmt_output(check_health(args))
