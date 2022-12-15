@@ -5,6 +5,7 @@
 Check plugin for UniFi Controller
 """
 
+from statistics import mean
 import argparse
 import os
 import re
@@ -142,26 +143,47 @@ def check_site_stats(args):
     header = {'Accept': 'application/json', 'Content-Type': 'application/json'}
     state, msg, perf = 3, None, {}
     proto = 'https' if args.ssl else 'http'
-    uri = f'{proto}://{args.host}/api/s/{args.site_id}/stat/health'
+    uri_0 = f'{proto}://{args.host}/api/s/{args.site_id}/stat/health'
+    uri_1 = f'{proto}://{args.host}/api/s/{args.site_id}/stat/sta'
 
     # Require a valid session to query the api endpoint
     req = api_login(args)
 
     # Get site stats
     try:
-        resp = req.get(uri, headers=header, allow_redirects=False, timeout=5)
+        resp_0 = req.get(uri_0, headers=header, allow_redirects=False,
+                         timeout=5)
     except requests.exceptions.ConnectionError:
         return {'state': 3, 'message': 'There was a connection problem for: '
-                f'{uri}', 'perfdata': None}
+                f'{uri_0}', 'perfdata': None}
 
-    data = resp.json()
-    state = 0 if data['data'][0]['status'] == 'ok' else 1
-    msg = f'WLAN - Active APs: {data["data"][0]["num_ap"]}, ' + \
-          f'Disconnected APs: {data["data"][0]["num_disconnected"]}, ' + \
-          f'Client Devices: {data["data"][0]["num_user"]}'
+    # List of all active clients on site
+    try:
+        resp_1 = req.get(uri_1, headers=header, allow_redirects=False,
+                         timeout=5)
+    except requests.exceptions.ConnectionError:
+        return {'state': 3, 'message': 'There was a connection problem for: '
+                f'{uri_1}', 'perfdata': None}
+
+    stats_site = resp_0.json()
+    stats_wifi_exp = mean([item for item in
+                           [item.get('satisfaction')
+                            for item in resp_1.json()['data']]
+                          if item is not None])
+
+    state = 0 if stats_site['data'][0]['status'] == 'ok' else 1
+
+    msg = f'WLAN - Active APs: {stats_site["data"][0]["num_ap"]}, ' + \
+          f'Disconnected APs: {stats_site["data"][0]["num_disconnected"]},' + \
+          f' Client Devices: {stats_site["data"][0]["num_user"]}, ' + \
+          f'WiFi Experience: {stats_wifi_exp:.2f}%'
 
     if args.perfdata:
-        perf = data['data'][0]
+        # Take over all stats
+        perf = stats_site['data'][0]
+
+        # Add additional keys
+        perf.update({'wifi_experience': f'{stats_wifi_exp:.2f}%'})
 
         # Remove some useless keys
         for key in ('status', 'subsystem'):
@@ -169,7 +191,7 @@ def check_site_stats(args):
 
         # Append Unit of Measurement (UoM)
         for key in ('rx_bytes-r', 'tx_bytes-r'):
-            perf.update({key: str(data['data'][0][key]) + 'B'})
+            perf.update({key: str(stats_site['data'][0][key]) + 'B'})
 
     return {'state': state, 'message': msg, 'perfdata': perf}
 
