@@ -5,6 +5,9 @@
 1. [About](#about)
 2. [License](#license)
 3. [Support](#support)
+4. [Requirements](#requirements)
+5. [Installation](#installation)
+6. [Run](#run)
 
 ## About
 
