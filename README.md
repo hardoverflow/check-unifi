@@ -2,7 +2,7 @@
 
 [![Pylint](https://github.com/hardoverflow/check-unifi/actions/workflows/pylint.yml/badge.svg?branch=main)](https://github.com/hardoverflow/check-unifi/actions/workflows/pylint.yml)
 
-#### Table of Contents
+## Table of Contents
 
 1. [About](#about)
 2. [License](#license)
@@ -19,7 +19,7 @@ enterprise networks with high-performance UniFi Switches, Gateways, and
 Wireless Access Points. Monitor client usage, set custom traffic rules,
 and much more.
 
-This check plugin is written in Python and communicate with the Rest API of
+This check plugin is written in Python and communicate with the REST-API of
 the controller. It allows you to check the following things:
 
 * Health state of the controller (Network Application)
@@ -52,8 +52,10 @@ pip install requests
 
 ## Run
 
-```
-usage: check_unifi.py [--help] --host HOST [--port PORT] [--ssl] [--mode MODE] [--site-id SITE_ID] [--user USER] [--password PASSWORD] [--perfdata] [--timeout TIMEOUT] [--version]
+```bash
+usage: check_unifi.py [--help] --host HOST [--port PORT] [--ssl] [--mode MODE]
+                      [--site-id SITE_ID] [--user USER] [--password PASSWORD]
+                      [--perfdata] [--timeout TIMEOUT] [--version]
 
 Check plugin for UniFi Network Application
 
@@ -74,7 +76,8 @@ options:
 ## Examples
 
 Standard health check (no authorization for this endpoint needed)
-```
+
+```bash
 # Example: ./check_unifi.py -H controller.fqdn.com --ssl
 OK: Healthy - UniFi Network Application: v7.3.76
 ```
