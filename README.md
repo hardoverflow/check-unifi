@@ -1,5 +1,7 @@
 # Icinga 2 check plugin for UniFi Network Application
 
+[![Pylint](https://github.com/hardoverflow/check-unifi/actions/workflows/pylint.yml/badge.svg?branch=main)](https://github.com/hardoverflow/check-unifi/actions/workflows/pylint.yml)
+
 #### Table of Contents
 
 1. [About](#about)
