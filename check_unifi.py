@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+#
+# Author:  Daniel Schade
+# Contact: mail (at) bashlover (de)
+# License: The Unlicense, see LICENSE file.
 
 """
 Check plugin for UniFi Network Application
@@ -17,7 +21,7 @@ import requests
 __version__ = '0.1'
 
 
-def handle_sigalrm(signum, frame, timeout=None):
+def handle_sigalrm(signum, frame, timeout=None): # pylint: disable=W0613
     """
     Handle a timeout
     """
