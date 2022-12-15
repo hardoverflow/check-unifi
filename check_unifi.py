@@ -167,55 +167,45 @@ def check_site_stats(args):
     """
     # Define some variables
     header = {'Accept': 'application/json', 'Content-Type': 'application/json'}
-    state, msg, perf = 3, None, {}
+    blob, state, msg, perf = [], 3, None, {}
     proto = 'https' if args.ssl else 'http'
-    uri_0 = f'{proto}://{args.host}/api/s/{args.site_id}/stat/health'
-    uri_1 = f'{proto}://{args.host}/api/s/{args.site_id}/stat/sta'
+    uri = [f'{proto}://{args.host}/api/s/{args.site_id}/stat/health',
+           f'{proto}://{args.host}/api/s/{args.site_id}/stat/sta']
 
     # Require a valid session to query the api endpoint
     req = api_login(args)
 
-    try:
-        # Get site stats
-        resp_0 = req.get(uri_0, headers=header, allow_redirects=False,
-                         timeout=5)
+    for url in uri:
+        try:
+            # Collect data from endpoint
+            resp = req.get(url, headers=header, allow_redirects=False,
+                             timeout=5)
 
-    # Exception for a connection error
-    except requests.exceptions.ConnectionError:
-        return {'state': 3, 'message': 'There was a connection problem for: '
-                f'{uri_0}', 'perfdata': None}
+        # Exception for a connection error
+        except requests.exceptions.ConnectionError:
+            return {'state': 3, 'message': 'There was a connection problem '
+                    f'for: {url}', 'perfdata': None}
 
-    try:
-        # List of all active clients on site
-        resp_1 = req.get(uri_1, headers=header, allow_redirects=False,
-                         timeout=5)
-
-    # Exception for a connection error
-    except requests.exceptions.ConnectionError:
-        return {'state': 3, 'message': 'There was a connection problem for: '
-                f'{uri_1}', 'perfdata': None}
-
-    # JSON to dict
-    stats_site = resp_0.json()
+        blob.append(resp.json())
 
     # Calculate WiFi Experiance
     stats_wifi_exp = mean([item for item in
                            [item.get('satisfaction')
-                            for item in resp_1.json()['data']]
+                            for item in blob[1]['data']]
                           if item is not None])
 
     # Health state of the site
-    state = 0 if stats_site['data'][0]['status'] == 'ok' else 1
+    state = 0 if blob[0]['data'][0]['status'] == 'ok' else 1
 
     # Format the output
-    msg = f'WLAN - Active APs: {stats_site["data"][0]["num_ap"]}, ' + \
-          f'Disconnected APs: {stats_site["data"][0]["num_disconnected"]},' + \
-          f' Client Devices: {stats_site["data"][0]["num_user"]}, ' + \
+    msg = f'WLAN - Active APs: {blob[0]["data"][0]["num_ap"]}, ' + \
+          f'Disconnected APs: {blob[0]["data"][0]["num_disconnected"]},' + \
+          f' Client Devices: {blob[0]["data"][0]["num_user"]}, ' + \
           f'WiFi Experience: {stats_wifi_exp:.2f}%'
 
     if args.perfdata:
         # Take over all stats
-        perf = stats_site['data'][0]
+        perf = blob[0]['data'][0]
 
         # Add additional keys
         perf.update({'wifi_experience': f'{stats_wifi_exp:.2f}%'})
@@ -226,7 +216,7 @@ def check_site_stats(args):
 
         # Append Unit of Measurement (UoM)
         for key in ('rx_bytes-r', 'tx_bytes-r'):
-            perf.update({key: str(stats_site['data'][0][key]) + 'B'})
+            perf.update({key: str(blob[0]['data'][0][key]) + 'B'})
 
     return {'state': state, 'message': msg, 'perfdata': perf}
 
