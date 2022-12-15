@@ -19,8 +19,8 @@ and much more.
 
 This check plugin allows you to check:
 
-* Health state of the controller
-* Site health
+* Health state of the controller (Network Application)
+* Site health and stats
 
 Additional features:
 
@@ -28,8 +28,8 @@ Additional features:
 
 ## License
 
-This project is licensed under the terms of the
-GNU General Public License Version 2.
+Lincensed under the [UNLICENSE](https://unlicense.org/), which is a license
+with no conditions whatsoever that dedicates works to the public domain.
 
 ## Support
 
