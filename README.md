@@ -59,10 +59,10 @@ options:
   --port PORT, -p PORT  The TCP port number, (default: 443)
   --ssl, -S             Use SSL for the connection
   --mode MODE, -m MODE  Mode of the check, (default: health)
-  --site-id SITE_ID     Site ID, (default: default))
+  --site-id SITE_ID     Site ID, (default: default)
   --user USER           Username
   --password PASSWORD   Password for user
-  --perfdata            Enable performance data, (Default: false
+  --perfdata            Enable performance data, (Default: false)
   --timeout TIMEOUT     Override the plugin timeout, (default: 10)
   --version, -v         Show the version number and exit
 ```

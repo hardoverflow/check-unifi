@@ -56,7 +56,7 @@ def args_parse():
     parser.add_argument('--site-id', type=str, required=False,
                         default=os.environ.get('CHECK_UNIFI_SITE_ID',
                                                'default'),
-                        help='Site ID, (default: default))')
+                        help='Site ID, (default: default)')
 
     # Username
     parser.add_argument('--user', type=str, required=False,
@@ -70,7 +70,7 @@ def args_parse():
 
     # Enable performance data
     parser.add_argument('--perfdata', action='store_true', required=False,
-                        help='Enable performance data, (Default: false')
+                        help='Enable performance data, (Default: false)')
 
     # Timeout
     parser.add_argument('--timeout', type=int, required=False,
