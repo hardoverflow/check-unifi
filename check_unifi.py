@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Check plugin for UniFi Controller
+Check plugin for UniFi Network Application
 """
 
 from statistics import mean
@@ -26,7 +26,7 @@ def args_parse():
     parser = argparse.ArgumentParser(
             add_help=False,
             prog='check_unifi.py',
-            description='Check plugin for UniFi Controller'
+            description='Check plugin for UniFi Network Application'
     )
 
     parser.add_argument('--help', '-h', action='help',
