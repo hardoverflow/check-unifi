@@ -126,9 +126,8 @@ def check_health(args):
 
     # If controller works fine, then these objects are 'ok'
     if resp.json()['meta']['up'] and resp.json()['meta']['rc'] == 'ok':
-        state = 0
-        msg = 'Healthy - UniFi Network Application: v' + \
-              f'{resp.json()["meta"]["server_version"]}'
+        msg, state = 'Healthy - UniFi Network Application: ' + \
+                     f'v{resp.json()["meta"]["server_version"]}', 0
 
     # Returns the state and message only
     return {"state": state, "message": msg, "perfdata": perf}
@@ -144,15 +143,20 @@ def api_login(args):
     proto = 'https' if args.ssl else 'http'
     uri = f'{proto}://{args.host}/api/login'
 
+    # Create a session object
     req = requests.Session()
 
     try:
+        # Login with given credentials
         req.post(uri, headers=header, json=payload, allow_redirects=False,
                  timeout=5)
+
+    # Exception for a connection error
     except requests.exceptions.ConnectionError:
         print(f'There was a connection problem for: {uri}')
         sys.exit(3)
 
+    # Return the session object
     return req
 
 
@@ -171,30 +175,39 @@ def check_site_stats(args):
     # Require a valid session to query the api endpoint
     req = api_login(args)
 
-    # Get site stats
     try:
+        # Get site stats
         resp_0 = req.get(uri_0, headers=header, allow_redirects=False,
                          timeout=5)
+
+    # Exception for a connection error
     except requests.exceptions.ConnectionError:
         return {'state': 3, 'message': 'There was a connection problem for: '
                 f'{uri_0}', 'perfdata': None}
 
-    # List of all active clients on site
     try:
+        # List of all active clients on site
         resp_1 = req.get(uri_1, headers=header, allow_redirects=False,
                          timeout=5)
+
+    # Exception for a connection error
     except requests.exceptions.ConnectionError:
         return {'state': 3, 'message': 'There was a connection problem for: '
                 f'{uri_1}', 'perfdata': None}
 
+    # JSON to dict
     stats_site = resp_0.json()
+
+    # Calculate WiFi Experiance
     stats_wifi_exp = mean([item for item in
                            [item.get('satisfaction')
                             for item in resp_1.json()['data']]
                           if item is not None])
 
+    # Health state of the site
     state = 0 if stats_site['data'][0]['status'] == 'ok' else 1
 
+    # Format the output
     msg = f'WLAN - Active APs: {stats_site["data"][0]["num_ap"]}, ' + \
           f'Disconnected APs: {stats_site["data"][0]["num_disconnected"]},' + \
           f' Client Devices: {stats_site["data"][0]["num_user"]}, ' + \
