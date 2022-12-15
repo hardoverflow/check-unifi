@@ -19,10 +19,11 @@ enterprise networks with high-performance UniFi Switches, Gateways, and
 Wireless Access Points. Monitor client usage, set custom traffic rules,
 and much more.
 
-This check plugin allows you to check:
+This check plugin is written in Python and communicate with the Rest API of
+the controller. It allows you to check the following things:
 
 * Health state of the controller (Network Application)
-* Site health and stats
+* Site health state and several stats
 
 Additional features:
 
