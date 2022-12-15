@@ -8,6 +8,7 @@
 4. [Requirements](#requirements)
 5. [Installation](#installation)
 6. [Run](#run)
+7. [Examples](#examples)
 
 ## About
 
@@ -65,4 +66,12 @@ options:
   --perfdata            Enable performance data, (Default: false)
   --timeout TIMEOUT     Override the plugin timeout, (default: 10)
   --version, -v         Show the version number and exit
+```
+
+## Examples
+
+Standard health check (no authorization for this endpoint needed)
+```
+# Example: ./check_unifi.py -H controller.fqdn.com --ssl
+OK: Healthy - UniFi Network Application: v7.3.76
 ```
