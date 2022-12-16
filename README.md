@@ -85,5 +85,5 @@ OK: Healthy - UniFi Network Application: v7.3.76
 
 ## Screenshots
 
-![image](/assets/images/output1.png)
-![image](/assets/images/perfdata1.png)
+![image](https://raw.githubusercontent.com/hardoverflow/check-unifi/main/assets/images/output1.png)
+![image](https://raw.githubusercontent.com/hardoverflow/check-unifi/main/assets/images/perfdata1.png)
