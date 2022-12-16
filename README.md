@@ -11,6 +11,7 @@
 5. [Installation](#installation)
 6. [Run](#run)
 7. [Examples](#examples)
+8. [Screenshots](#screenshots)
 
 ## About
 
@@ -81,3 +82,8 @@ Standard health check (no authorization for this endpoint needed)
 # Example: ./check_unifi.py -H controller.fqdn.com --ssl
 OK: Healthy - UniFi Network Application: v7.3.76
 ```
+
+## Screenshots
+
+![image](/assets/images/output1.png)
+![image](/assets/images/perfdata1.png)
