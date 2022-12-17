@@ -54,24 +54,27 @@ pip install requests
 ## Run
 
 ```bash
-usage: check_unifi.py [--help] --host HOST [--port PORT] [--ssl] [--mode MODE]
-                      [--site-id SITE_ID] [--user USER] [--password PASSWORD]
-                      [--perfdata] [--timeout TIMEOUT] [--version]
+usage: check_unifi.py [--help] --host HOST [--port PORT] [--ssl] [--insecure]
+                      [--mode MODE] [--site-id SITE_ID] [--user USER]
+                      [--password PASSWORD] [--perfdata] [--timeout TIMEOUT]
+                      [--version]
 
 Check plugin for UniFi Network Application
 
 options:
-  --help, -h            Show this help message and exit
+  --help, -h            Show this help message and quit
   --host HOST, -H HOST  Host name or IP address of the UniFi Controller
   --port PORT, -p PORT  The TCP port number, (default: 443)
   --ssl, -S             Use SSL for the connection
-  --mode MODE, -m MODE  Mode of the check, (default: health)
+  --insecure, -k        Ingore ssl certificate errors (eg. self-sign cert)
+  --mode MODE, -m MODE  Set the check mode: ["health", "stats"] (default:
+                        health)
   --site-id SITE_ID     Site ID, (default: default)
-  --user USER           Username
+  --user USER           Username to login
   --password PASSWORD   Password for user
   --perfdata            Enable performance data, (Default: false)
   --timeout TIMEOUT     Override the plugin timeout, (default: 10)
-  --version, -v         Show the version number and exit
+  --version, -v         Show version number and quit
 ```
 
 ## Examples

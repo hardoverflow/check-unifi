@@ -3,7 +3,7 @@
 #
 # Author:  Daniel Schade
 # Contact: mail (at) bashlover (de)
-# License: The Unlicense, see LICENSE file.
+# License: The Unlicense, see UNLICENSE file.
 
 """
 Check plugin for UniFi Network Application
@@ -17,8 +17,9 @@ import re
 import signal
 import sys
 import requests
+from urllib3.exceptions import InsecureRequestWarning
 
-__version__ = '0.1'
+__version__ = '0.2'
 
 
 def handle_sigalrm(signum, frame, timeout=None): # pylint: disable=W0613
@@ -45,7 +46,7 @@ def args_parse():
 
     parser.add_argument('--help', '-h', action='help',
                         default=argparse.SUPPRESS,
-                        help='Show this help message and exit')
+                        help='Show this help message and quit')
 
     # Host name or IP address of the controller
     parser.add_argument('--host', '-H', type=str, required=True,
@@ -61,10 +62,15 @@ def args_parse():
     parser.add_argument('--ssl', '-S', action='store_true', required=False,
                         help='Use SSL for the connection')
 
+    # Disable certificate check if eg. self-signed
+    parser.add_argument('--insecure', '-k', action='store_false',
+                        required=False, help='Ingore ssl certificate errors \
+                                (eg. self-sign cert)')
+
     # Set the mode of the check
     parser.add_argument('--mode', '-m', type=str, required=False,
                         default=os.environ.get('CHECK_UNIFI_MODE', 'health'),
-                        help='Mode of the check, ["health", "stats"] \
+                        help='Set the check mode: ["health", "stats"] \
                                 (default: health)')
 
     # Set the site-id
@@ -95,7 +101,7 @@ def args_parse():
     # Show the version of the check plugin
     parser.add_argument('--version', '-v', action='version',
                         version=f'%(prog)s {__version__}',
-                        help='Show the version number of the check plugin')
+                        help='Show version number and quit')
 
     # Return arguments
     return parser.parse_args()
@@ -110,9 +116,13 @@ def check_health(args):
     proto = 'https' if args.ssl else 'http'
     uri = f'{proto}://{args.host}/status'
 
+    if not args.insecure:
+        requests.packages.urllib3.disable_warnings( # pylint: disable=E1101
+                category=InsecureRequestWarning)
     try:
         # Get the public health endpoint
-        resp = requests.get(uri, allow_redirects=False, timeout=5)
+        resp = requests.get(uri, allow_redirects=False, timeout=5,
+                            verify=bool(args.insecure))
 
         # Detects a redirection
         if re.match(r'^30\d', str(resp.status_code)):
@@ -124,10 +134,15 @@ def check_health(args):
         return {'state': 3, 'message': 'There was a connection problem for: '
                 f'{uri}', 'perfdata': None}
 
+    # JSON to dict
+    blob = resp.json() if resp.json() else {}
+
     # If controller works fine, then these objects are 'ok'
-    if resp.json()['meta']['up'] and resp.json()['meta']['rc'] == 'ok':
+    if blob['meta']['up'] and blob['meta']['rc'] == 'ok':
         msg, state = 'Healthy - UniFi Network Application: ' + \
-                     f'v{resp.json()["meta"]["server_version"]}', 0
+                     f'v{blob["meta"]["server_version"]}', 0
+    else:
+        msg, state = 'Unhealthy', 1
 
     # Returns the state and message only
     return {"state": state, "message": msg, "perfdata": perf}
@@ -145,6 +160,12 @@ def api_login(args):
 
     # Create a session object
     req = requests.Session()
+
+    # Disable ssl certificate check
+    if not args.insecure:
+        requests.packages.urllib3.disable_warnings( # pylint: disable=E1101
+                category=InsecureRequestWarning)
+        req.verify = False
 
     try:
         # Login with given credentials
