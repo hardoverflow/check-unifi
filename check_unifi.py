@@ -207,6 +207,15 @@ def check_site_stats(args):
             return {'state': 3, 'message': 'There was a connection problem '
                     f'for: {url}', 'perfdata': None}
 
+        # Detects a redirection
+        if re.match(r'^30\d', str(resp.status_code)):
+            return {'state': 3, 'message': f'Found redirection for {uri}. '
+                    'Wrong protocol?', 'perfdata': None}
+        # Unauthorized
+        if resp.status_code == 401:
+            return {'state': 3, 'message': 'Unauthorized. Login is required.',
+                    'perfdata': None}
+
         blob.append(resp.json())
 
     # Calculate WiFi Experiance
