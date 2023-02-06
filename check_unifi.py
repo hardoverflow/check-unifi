@@ -19,7 +19,7 @@ import sys
 import requests
 from urllib3.exceptions import InsecureRequestWarning
 
-__version__ = '0.2'
+__version__ = '0.3'
 
 
 def handle_sigalrm(signum, frame, timeout=None): # pylint: disable=W0613
