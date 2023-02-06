@@ -19,7 +19,7 @@ import sys
 import requests
 from urllib3.exceptions import InsecureRequestWarning
 
-__version__ = '0.2'
+__version__ = '0.3'
 
 
 def handle_sigalrm(signum, frame, timeout=None): # pylint: disable=W0613
@@ -55,8 +55,8 @@ def args_parse():
 
     # Set the port number where the controller is listening
     parser.add_argument('--port', '-p', type=int, required=False,
-                        default=os.environ.get('CHECK_UNIFI_PORT', 443),
-                        help='The TCP port number, (default: 443)')
+                        default=os.environ.get('CHECK_UNIFI_PORT', 8080),
+                        help='The TCP port number, (default: 8080)')
 
     # Enable ssl for the connection
     parser.add_argument('--ssl', '-S', action='store_true', required=False,
@@ -114,7 +114,7 @@ def check_health(args):
     """
     state, msg, perf = 3, None, None
     proto = 'https' if args.ssl else 'http'
-    uri = f'{proto}://{args.host}/status'
+    uri = f'{proto}://{args.host}:{args.port}/status'
 
     if not args.insecure:
         requests.packages.urllib3.disable_warnings( # pylint: disable=E1101
@@ -156,7 +156,7 @@ def api_login(args):
     header = {'Accept': 'application/json', 'Content-Type': 'application/json'}
     payload = {'username': args.user, 'password': args.password}
     proto = 'https' if args.ssl else 'http'
-    uri = f'{proto}://{args.host}/api/login'
+    uri = f'{proto}://{args.host}:{args.port}/api/login'
 
     # Create a session object
     req = requests.Session()
@@ -174,7 +174,7 @@ def api_login(args):
 
     # Exception for a connection error
     except requests.exceptions.ConnectionError:
-        print(f'There was a connection problem for: {uri}')
+        print(f'UNKNOWN: There was a connection problem for: {uri}')
         sys.exit(3)
 
     # Return the session object
@@ -190,8 +190,8 @@ def check_site_stats(args):
     header = {'Accept': 'application/json', 'Content-Type': 'application/json'}
     blob, state, msg, perf = [], 3, None, {}
     proto = 'https' if args.ssl else 'http'
-    uri = [f'{proto}://{args.host}/api/s/{args.site_id}/stat/health',
-           f'{proto}://{args.host}/api/s/{args.site_id}/stat/sta']
+    uri = [f'{proto}://{args.host}:{args.port}/api/s/{args.site_id}/stat/health',
+           f'{proto}://{args.host}:{args.port}/api/s/{args.site_id}/stat/sta']
 
     # Require a valid session to query the api endpoint
     req = api_login(args)
@@ -211,6 +211,7 @@ def check_site_stats(args):
         if re.match(r'^30\d', str(resp.status_code)):
             return {'state': 3, 'message': f'Found redirection for {uri}. '
                     'Wrong protocol?', 'perfdata': None}
+
         # Unauthorized
         if resp.status_code == 401:
             return {'state': 3, 'message': 'Unauthorized. Login is required.',
