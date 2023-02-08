@@ -64,7 +64,7 @@ Check plugin for UniFi Network Application
 options:
   --help, -h            Show this help message and quit
   --host HOST, -H HOST  Host name or IP address of the UniFi Controller
-  --port PORT, -p PORT  The TCP port number, (default: 443)
+  --port PORT, -p PORT  The TCP port number, (default: 8080)
   --ssl, -S             Use SSL for the connection
   --insecure, -k        Ingore ssl certificate errors (eg. self-sign cert)
   --mode MODE, -m MODE  Set the check mode: ["health", "stats"] (default:
@@ -72,18 +72,37 @@ options:
   --site-id SITE_ID     Site ID, (default: default)
   --user USER           Username to login
   --password PASSWORD   Password for user
-  --perfdata            Enable performance data, (Default: false)
+  --perfdata            Enable performance data, (default: false)
   --timeout TIMEOUT     Override the plugin timeout, (default: 10)
   --version, -v         Show version number and quit
 ```
 
 ## Examples
 
-Standard health check (no authorization for this endpoint needed)
+### Standard health check (no authorization for this endpoint needed).
 
 ```bash
-# Example: ./check_unifi.py -H controller.fqdn.com --ssl
+./check_unifi.py \
+    --host 'controller.fqdn.com' \
+    --port 443 \
+    --ssl
+
 OK: Healthy - UniFi Network Application: v7.3.76
+```
+
+### Get some site information.
+
+```bash
+./check_unifi.py \
+    --host 'controller.fqdn.com' \
+    --port 443 \
+    --ssl \
+    --mode 'stats' \
+    --user 'monitoring_user' \
+    --pass 'securepassword' \
+    --site-id 'default'
+
+OK: WLAN - Active APs: 4, Disconnected APs: 0, Client Devices: 19, WiFi Experience: 97.84%
 ```
 
 ## Screenshots
