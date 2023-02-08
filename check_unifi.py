@@ -91,7 +91,7 @@ def args_parse():
 
     # Enable performance data
     parser.add_argument('--perfdata', action='store_true', required=False,
-                        help='Enable performance data, (Default: false)')
+                        help='Enable performance data, (default: false)')
 
     # Set the timeout of the check
     parser.add_argument('--timeout', type=int, required=False,
