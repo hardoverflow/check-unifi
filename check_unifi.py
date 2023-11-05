@@ -19,7 +19,7 @@ import sys
 import requests
 from urllib3.exceptions import InsecureRequestWarning
 
-__version__ = '0.3'
+__version__ = '0.4'
 
 
 def handle_sigalrm(signum, frame, timeout=None): # pylint: disable=W0613
@@ -124,15 +124,20 @@ def check_health(args):
         resp = requests.get(uri, allow_redirects=False, timeout=5,
                             verify=bool(args.insecure))
 
-        # Detects a redirection
-        if re.match(r'^30\d', str(resp.status_code)):
+        # Redirection messages (300-399)
+        if re.match(r'^3\d\d', str(resp.status_code)):
             return {'state': 3, 'message': f'Found redirection for {uri}. '
                     'Wrong protocol?', 'perfdata': None}
 
+        # Server error responses (500-599)
+        if re.match(r'^5\d\d', str(resp.status_code)):
+            return {'state': 2, 'message': f'Connection to {uri} failed. '
+                    f'Status Code: {resp.status_code}', 'perfdata': None}
+
     # Exception for a connection error
     except requests.exceptions.ConnectionError:
-        return {'state': 3, 'message': 'There was a connection problem for: '
-                f'{uri}', 'perfdata': None}
+        return {'state': 2, 'message': f'Connection to {uri} failed. ',
+                'perfdata': None}
 
     # JSON to dict
     blob = resp.json() if resp.json() else {}
