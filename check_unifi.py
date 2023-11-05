@@ -113,8 +113,8 @@ def check_health(args):
 
     """
     state, msg, perf = 3, None, None
-    proto = 'https' if args.ssl else 'http'
-    uri = f'{proto}://{args.host}:{args.port}/status'
+    scheme = 'https' if args.ssl else 'http'
+    uri = f'{scheme}://{args.host}:{args.port}/status'
 
     if not args.insecure:
         requests.packages.urllib3.disable_warnings( # pylint: disable=E1101
@@ -155,8 +155,8 @@ def api_login(args):
     """
     header = {'Accept': 'application/json', 'Content-Type': 'application/json'}
     payload = {'username': args.user, 'password': args.password}
-    proto = 'https' if args.ssl else 'http'
-    uri = f'{proto}://{args.host}:{args.port}/api/login'
+    scheme = 'https' if args.ssl else 'http'
+    uri = f'{scheme}://{args.host}:{args.port}/api/login'
 
     # Create a session object
     req = requests.Session()
@@ -189,9 +189,9 @@ def check_site_stats(args):
     # Define some variables
     header = {'Accept': 'application/json', 'Content-Type': 'application/json'}
     blob, state, msg, perf = [], 3, None, {}
-    proto = 'https' if args.ssl else 'http'
-    uri = [f'{proto}://{args.host}:{args.port}/api/s/{args.site_id}/stat/health',
-           f'{proto}://{args.host}:{args.port}/api/s/{args.site_id}/stat/sta']
+    scheme = 'https' if args.ssl else 'http'
+    uri = [f'{scheme}://{args.host}:{args.port}/api/s/{args.site_id}/stat/health',
+           f'{scheme}://{args.host}:{args.port}/api/s/{args.site_id}/stat/sta']
 
     # Require a valid session to query the api endpoint
     req = api_login(args)
