@@ -19,7 +19,7 @@ import sys
 import requests
 from urllib3.exceptions import InsecureRequestWarning
 
-__version__ = '0.4'
+__version__ = '0.5'
 
 
 def handle_sigalrm(signum, frame, timeout=None): # pylint: disable=W0613
@@ -224,11 +224,15 @@ def check_site_stats(args):
 
         blob.append(resp.json())
 
-    # Calculate WiFi Experiance
-    stats_wifi_exp = mean([item for item in
-                           [item.get('satisfaction')
-                            for item in blob[1]['data']]
-                          if item is not None])
+    # Calculate WiFi Experience
+    try:
+        stats_wifi_exp = mean([item for item in
+                               [item.get('satisfaction')
+                                for item in blob[1]['data']]
+                              if item is not None])
+    except: # pylint: disable=W0702
+        # If no client connected, set stats_wifi_exp to 100%
+        stats_wifi_exp = 100
 
     # Health state of the site
     state = 0 if blob[0]['data'][0]['status'] == 'ok' else 1

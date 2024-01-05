@@ -87,7 +87,7 @@ options:
     --port 443 \
     --ssl
 
-OK: Healthy - UniFi Network Application: v7.3.76
+OK: Healthy - UniFi Network Application: v8.0.24
 ```
 
 ### Get some site information.
