@@ -227,10 +227,10 @@ def check_site_stats(args):
     # Calculate WiFi Experience
     try:
         stats_wifi_exp = mean([item for item in
-                               [item.get('satisfaction1')
+                               [item.get('satisfaction')
                                 for item in blob[1]['data']]
                               if item is not None])
-    except:
+    except: # pylint: disable=W0702
         # If no client connected, set stats_wifi_exp to 100%
         stats_wifi_exp = 100
 
