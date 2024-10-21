@@ -103,6 +103,7 @@ OK: Healthy - UniFi Network Application: v8.0.24
     --site-id 'default'
 
 OK: WLAN - Active APs: 4, Disconnected APs: 0, Client Devices: 19, WiFi Experience: 97.84%
+LAN - Active SWs: 2, Disconnected SWs: 0 Client Devices: 5
 ```
 
 ## Screenshots
