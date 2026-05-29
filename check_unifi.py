@@ -448,7 +448,7 @@ def check_all(args, checks):
         if result.get('perfdata'):
             perf.update(result['perfdata'])
 
-    return {'state': state, 'message': ' | '.join(parts),
+    return {'state': state, 'message': '; '.join(parts),
             'perfdata': perf or None}
 
 
