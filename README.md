@@ -25,10 +25,23 @@ the controller. It allows you to check the following things:
 
 * Health state of the controller (Network Application)
 * Site health state and several stats
+* Adopted devices and their connectivity
+* Pending firmware upgrades
+* Controller version
 
 Additional features:
 
 * Performance data
+
+### UniFi OS
+
+UniFi is deprecating the standalone Network Application in favor of UniFi OS
+Server, which changes the API URIs. Pass `--unifi-os` to use the new endpoints
+(`/proxy/network`, `/api/auth/login`). Without the flag the legacy paths are
+used, so existing setups keep working.
+
+On UniFi OS the `health` check authenticates, since `/proxy/network/status` is
+not public there, so `--user`/`--password` are required for every mode.
 
 ## License
 
@@ -55,27 +68,41 @@ pip install requests
 
 ```bash
 usage: check_unifi.py [--help] --host HOST [--port PORT] [--ssl] [--insecure]
-                      [--mode MODE] [--site-id SITE_ID] [--user USER]
-                      [--password PASSWORD] [--perfdata] [--timeout TIMEOUT]
-                      [--version]
+                      [--mode MODE] [--site-id SITE_ID] [--unifi-os]
+                      [--user USER] [--password PASSWORD] [--perfdata]
+                      [--timeout TIMEOUT] [--version]
 
 Check plugin for UniFi Network Application
 
 options:
-  --help, -h            Show this help message and quit
-  --host HOST, -H HOST  Host name or IP address of the UniFi Controller
-  --port PORT, -p PORT  The TCP port number, (default: 8080)
-  --ssl, -S             Use SSL for the connection
-  --insecure, -k        Ingore ssl certificate errors (eg. self-sign cert)
-  --mode MODE, -m MODE  Set the check mode: ["health", "stats"] (default:
-                        health)
-  --site-id SITE_ID     Site ID, (default: default)
-  --user USER           Username to login
-  --password PASSWORD   Password for user
-  --perfdata            Enable performance data, (default: false)
-  --timeout TIMEOUT     Override the plugin timeout, (default: 10)
-  --version, -v         Show version number and quit
+  --help, -h           Show this help message and quit
+  --host, -H HOST      Host name or IP address of the UniFi Controller
+  --port, -p PORT      The TCP port number, (default: 8080)
+  --ssl, -S            Use SSL for the connection
+  --insecure, -k       Ingore ssl certificate errors (eg. self-sign cert)
+  --mode, -m MODE      Set the check mode: ["health", "stats", "devices",
+                       "firmware", "version", "all"] (default: health)
+  --site-id SITE_ID    Site ID, (default: default)
+  --unifi-os           Use UniFi OS / UniFi OS Server endpoints
+                       (/proxy/network ...). Omit for a legacy standalone
+                       Network Application, (default: false)
+  --user USER          Username to login
+  --password PASSWORD  Password for user
+  --perfdata           Enable performance data, (default: false)
+  --timeout TIMEOUT    Override the plugin timeout, (default: 10)
+  --version, -v        Show version number and quit
 ```
+
+The check mode is set with `--mode`:
+
+| Mode       | Description                                  |
+|------------|----------------------------------------------|
+| `health`   | Health state of the controller (default)     |
+| `stats`    | Site WLAN stats (APs, clients, experience)   |
+| `devices`  | Adopted devices, CRITICAL if any disconnected|
+| `firmware` | WARNING if devices have pending upgrades     |
+| `version`  | Controller version                           |
+| `all`      | Run every check, worst state wins            |
 
 ## Examples
 
@@ -103,6 +130,21 @@ OK: Healthy - UniFi Network Application: v8.0.24
     --site-id 'default'
 
 OK: WLAN - Active APs: 4, Disconnected APs: 0, Client Devices: 19, WiFi Experience: 97.84%
+```
+
+### UniFi OS Server: run every check.
+
+```bash
+./check_unifi.py \
+    --host 'controller.fqdn.com' \
+    --port 443 \
+    --ssl \
+    --unifi-os \
+    --mode 'all' \
+    --user 'monitoring_user' \
+    --pass 'securepassword'
+
+OK: [health] Healthy - UniFi Network Application; [version] UniFi Network Application: v9.0.108; [devices] Devices - Total: 5, Connected: 5, Disconnected: 0; [firmware] Firmware - All devices up to date; [stats] WLAN - Active APs: 4, Disconnected APs: 0, Client Devices: 19, WiFi Experience: 97.84%
 ```
 
 ## Screenshots
